@@ -1,0 +1,26 @@
+name: Update Currency Rates
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Runs daily at 3 AM UTC
+  workflow_dispatch:     # Allows manual trigger
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fetch latest currency rates
+        run: |
+          curl "https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_zuPyPxsvCpGqXYVOr033iXJTVhDscaW255MeV9gh" -o rates.json
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add rates.json
+          git commit -m "Update currency rates" || echo "No changes to commit"
+          git push
