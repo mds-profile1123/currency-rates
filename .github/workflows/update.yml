@@ -15,7 +15,7 @@ jobs:
 
       - name: Fetch latest currency rates
         run: |
-          curl "https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_zuPyPxsvCpGqXYVOr033iXJTVhDscaW255MeV9gh" -o rates.json
+          curl "https://api.freecurrencyapi.com/v1/latest?apikey=${{ secrets.CURRENCY_API_KEY }}&base_currency=USD" -o rates.json
 
       - name: Commit and push changes
         run: |
