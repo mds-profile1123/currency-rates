@@ -2,8 +2,8 @@ name: Update Currency Rates
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Runs every 15 minutes
-  workflow_dispatch:        # Allows manual trigger from GitHub UI
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch:        # Manual trigger
 
 jobs:
   update-rates:
@@ -15,11 +15,16 @@ jobs:
 
       - name: Fetch latest rates from FreeCurrencyAPI
         run: |
-          echo "Fetching latest rates..."
+          echo "Fetching latest currency rates..."
           curl "https://api.freecurrencyapi.com/v1/latest?apikey=${{ secrets.CURRENCY_API_KEY }}&base_currency=USD" -o latest.json
 
-          # Extract only the "data" object and save to rates.json
+          echo "Extracting rates..."
           jq '.data' latest.json > rates.json
+
+          # Append a dummy timestamp field so the file always changes
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Appending timestamp: $timestamp"
+          jq --arg ts "$timestamp" '. + { "_last_updated": $ts }' rates.json > tmp.json && mv tmp.json rates.json
 
       - name: Configure Git
         run: |
@@ -29,5 +34,5 @@ jobs:
       - name: Commit and push changes
         run: |
           git add rates.json
-          git commit -m "Update currency rates" || echo "No changes to commit"
+          git commit -m "Update currency rates with timestamp"
           git push
