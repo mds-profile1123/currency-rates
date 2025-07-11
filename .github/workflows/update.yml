@@ -2,8 +2,8 @@ name: Update Currency Rates
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Every 15 minutes
-  workflow_dispatch:        # Manual trigger
+    - cron: '0 * * * *'  # Every hour at minute 0 (e.g. 00:00, 01:00, ...)
+  workflow_dispatch:       # Manual trigger
 
 jobs:
   update-rates:
@@ -13,17 +13,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch latest rates from FreeCurrencyAPI
+      - name: Fetch latest rates from OpenExchangeRates
         run: |
           echo "Fetching latest currency rates..."
-          curl "https://api.freecurrencyapi.com/v1/latest?apikey=${{ secrets.CURRENCY_API_KEY }}&base_currency=USD" -o latest.json
 
-          echo "Extracting rates..."
-          jq '.data' latest.json > rates.json
+          curl "https://openexchangerates.org/api/latest.json?app_id=${{ secrets.OPENEXCHANGE_APP_ID }}&base=USD" -o latest.json
 
-          # Append a dummy timestamp field so the file always changes
+          echo "Extracting 'rates' object..."
+          jq '.rates' latest.json > rates.json
+
+          # Append dummy timestamp to force update
           timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          echo "Appending timestamp: $timestamp"
           jq --arg ts "$timestamp" '. + { "_last_updated": $ts }' rates.json > tmp.json && mv tmp.json rates.json
 
       - name: Configure Git
